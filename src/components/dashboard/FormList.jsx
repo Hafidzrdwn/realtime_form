@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { formService } from '../../services/formService';
+import { copyFormLink } from '../../services/exportService';
 
 export default function FormList({ onConfigure, onViewDashboard, showToast }) {
   const [forms, setForms] = useState([]);
@@ -47,6 +48,11 @@ export default function FormList({ onConfigure, onViewDashboard, showToast }) {
 
   const getResponseCount = (form) => {
     return form.responses ? Object.keys(form.responses).length : 0;
+  };
+
+  const handleCopyLink = async (slug) => {
+    const result = await copyFormLink(`/forms/${slug}`);
+    if (result.success) showToast('Link berhasil disalin!', 'success');
   };
 
   return (
@@ -102,6 +108,10 @@ export default function FormList({ onConfigure, onViewDashboard, showToast }) {
                 <span className="truncate">/forms/{form.slug}</span>
               </div>
               <div className="flex flex-wrap gap-2">
+                <button onClick={() => handleCopyLink(form.slug)} className="text-xs bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 px-3 py-1.5 rounded-lg border border-indigo-500/20 cursor-pointer transition-colors font-medium flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                  Salin Link
+                </button>
                 <button onClick={() => onConfigure(form.id)} className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer transition-colors font-medium">Configure</button>
                 <button onClick={() => onViewDashboard(form.id)} className="text-xs bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 dark:text-blue-400 px-3 py-1.5 rounded-lg border border-blue-500/20 cursor-pointer transition-colors font-medium">Dashboard</button>
                 <button onClick={() => handleToggleActive(form)} className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer transition-colors font-medium">

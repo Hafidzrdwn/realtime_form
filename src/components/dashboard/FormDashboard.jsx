@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { formService } from '../../services/formService';
+import { copyFormLink, exportToExcel, exportToPDF } from '../../services/exportService';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
-export default function FormDashboard({ formId, onBack }) {
+export default function FormDashboard({ formId, onBack, showToast }) {
   const [form, setForm] = useState(null);
   const [responses, setResponses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +26,6 @@ export default function FormDashboard({ formId, onBack }) {
 
   const isDark = document.documentElement.classList.contains('dark');
 
-  // Charts for multiple choice questions
   const mcQuestions = questions.filter(q => q.type === 'multiple_choice' && q.options);
   const mcChartData = mcQuestions.map(q => {
     const counts = {};
@@ -59,6 +59,20 @@ export default function FormDashboard({ formId, onBack }) {
         <div className="flex-1">
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">{form.title} — Dashboard</h2>
           <p className="text-xs text-gray-400">{responses.length} responden</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={async () => { const r = await copyFormLink(`/forms/${form.slug}`); if (r.success) showToast?.('Link disalin!', 'success'); }} className="flex items-center gap-1.5 text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer transition-colors font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+            Salin Link
+          </button>
+          <button disabled={responses.length === 0} onClick={() => { const headers = questions.map(q => q.label); const rows = responses.map(r => questions.map(q => r.answers?.[q.id] || '-')); exportToExcel(headers, rows, form.slug); showToast?.('Diekspor ke Excel!', 'success'); }} className="flex items-center gap-1.5 text-xs bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-400 px-3 py-2 rounded-xl border border-green-500/20 cursor-pointer transition-colors font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            Excel
+          </button>
+          <button disabled={responses.length === 0} onClick={() => { const headers = questions.map(q => q.label); const rows = responses.map(r => questions.map(q => r.answers?.[q.id] || '-')); exportToPDF(form.title, headers, rows, form.slug); showToast?.('Diekspor ke PDF!', 'success'); }} className="flex items-center gap-1.5 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 px-3 py-2 rounded-xl border border-red-500/20 cursor-pointer transition-colors font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            PDF
+          </button>
         </div>
       </div>
 

@@ -6,6 +6,7 @@ import { useSurveyData } from '../hooks/useSurveyData';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../hooks/useTheme';
 import { Toast } from '../components/ui/Toast';
+import { copyFormLink } from '../services/exportService';
 import { EducationChart } from '../components/charts/EducationChart';
 import { AgeDistributionChart } from '../components/charts/AgeDistributionChart';
 import { MajorDistributionChart } from '../components/charts/MajorDistributionChart';
@@ -103,7 +104,7 @@ export default function Result() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
             Pengaturan
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700/50">
               <label className="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Judul Form Survei</label>
               <form onSubmit={handleUpdateTitle} className="flex gap-2">
@@ -134,6 +135,14 @@ export default function Result() {
                 <button type="submit" className="bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/20 hover:bg-red-500/30 hover:border-red-500/50 px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer">Ubah</button>
               </form>
             </div>
+
+            <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700/50 flex flex-col justify-center">
+              <label className="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Bagikan Link Survei</label>
+              <button onClick={async () => { const r = await copyFormLink('/'); if (r.success) showToast('Link survei disalin!', 'success'); }} className="flex items-center justify-center gap-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-4 py-2.5 rounded-xl border border-indigo-500/20 text-sm font-semibold transition-colors cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                Salin Link
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -158,7 +167,7 @@ export default function Result() {
     if (activeTab === 'form-dashboard' && selectedFormId) {
       return (
         <Suspense fallback={<div className="text-center py-20 text-gray-400">Memuat...</div>}>
-          <FormDashboard formId={selectedFormId} onBack={() => navigateToTab('forms')} />
+          <FormDashboard formId={selectedFormId} onBack={() => navigateToTab('forms')} showToast={showToast} />
         </Suspense>
       );
     }
@@ -217,7 +226,7 @@ export default function Result() {
               </div>
             </div>
 
-            <MasterTable data={data} onDelete={executeDelete} />
+            <MasterTable data={data} onDelete={executeDelete} showToast={showToast} />
           </>
         )}
       </div>
