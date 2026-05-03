@@ -3,10 +3,12 @@ import { firebaseService } from '../services/firebaseService';
 
 export const useSettings = () => {
   const [settings, setSettings] = useState({ title: 'Survey Workshop', allowMultiple: true });
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const unsub = firebaseService.subscribeToSettings((data) => {
       setSettings(prev => ({ ...prev, ...data }));
+      setIsLoaded(true);
     });
     return () => unsub();
   }, []);
@@ -40,5 +42,5 @@ export const useSettings = () => {
     }
   };
 
-  return { settings, updateSetting, changePassword };
+  return { settings, isLoaded, updateSetting, changePassword };
 };

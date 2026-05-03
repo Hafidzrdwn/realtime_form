@@ -15,7 +15,7 @@ export default function Form() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   
-  const { settings } = useSettings();
+  const { settings, isLoaded } = useSettings();
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   useEffect(() => {
@@ -124,7 +124,11 @@ export default function Form() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-linear-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
       <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-white/20 dark:border-gray-700/50">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 mb-3 tracking-tight">{settings.title || 'Survey Workshop'}</h1>
+          {isLoaded ? (
+            <h1 className="text-2xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 mb-3 tracking-tight">{settings.title}</h1>
+          ) : (
+            <div className="h-8 w-56 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse mx-auto mb-3"></div>
+          )}
           <p className="text-gray-500 dark:text-gray-400 font-medium">Silakan isi formulir di bawah ini dengan data yang valid.</p>
         </div>
 
