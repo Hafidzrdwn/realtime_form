@@ -9,14 +9,16 @@ export const useAuth = () => {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    const unsub = firebaseService.subscribeToAuthState((firebaseUser) => {
-      setUser(firebaseUser);
+    const unsub = firebaseService.subscribeToAuthState((userData) => {
+      setUser(userData);
       setIsChecking(false);
     });
     return () => unsub();
   }, []);
 
   const isAuthenticated = !!user;
+  const isSuperadmin = user?.role === 'superadmin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
   const login = async (email, password, rememberMe) => {
     try {
@@ -56,5 +58,5 @@ export const useAuth = () => {
     }
   }, [isChecking, isAuthenticated, navigate]);
 
-  return { user, isAuthenticated, isChecking, login, logout, requireAuth, requireGuest };
+  return { user, isAuthenticated, isSuperadmin, isAdmin, isChecking, login, logout, requireAuth, requireGuest };
 };

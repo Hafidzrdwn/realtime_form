@@ -15,27 +15,15 @@ import { MasterTable } from '../components/dashboard/MasterTable';
 const FormList = lazy(() => import('../components/dashboard/FormList'));
 const FormBuilder = lazy(() => import('../components/dashboard/FormBuilder'));
 const FormDashboard = lazy(() => import('../components/dashboard/FormDashboard'));
-
-const NAV_ITEMS = [
-  { key: 'dashboard', label: 'Dashboard' },
-  { key: 'forms', label: 'Forms' },
-  { key: 'settings', label: 'Settings' },
-];
-
-const SunIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-);
-
-const MoonIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-);
+const UserManagement = lazy(() => import('../components/dashboard/UserManagement'));
 
 export default function Result() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'dashboard';
+  const { user, isChecking, isSuperadmin, logout, requireAuth } = useAuth();
+  
+  const activeTab = searchParams.get('tab') || (isSuperadmin ? 'dashboard' : 'forms');
   const selectedFormId = searchParams.get('formId') || null;
 
-  const { isChecking, logout, requireAuth } = useAuth();
   const { settings, updateSetting, changePassword } = useSettings();
   const { data, selectedEducation, setSelectedEducation, handleDelete, eduData, ageData, majorData } = useSurveyData();
   const { toast, showToast } = useToast();
@@ -44,9 +32,30 @@ export default function Result() {
   const [newPassword, setNewPassword] = useState('');
   const [titleDraft, setTitleDraft] = useState(settings.title);
 
+  const NAV_ITEMS = [
+    ...(isSuperadmin ? [{ key: 'dashboard', label: 'Dashboard' }] : []),
+    { key: 'forms', label: 'Forms' },
+    ...(isSuperadmin ? [{ key: 'users', label: 'User Management' }] : []),
+    { key: 'settings', label: 'Settings' },
+  ];
+
+  const SunIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+  );
+
+  const MoonIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+  );
+
   useEffect(() => {
     requireAuth();
   }, [requireAuth]);
+
+  useEffect(() => {
+    if (!isChecking && !isSuperadmin && (activeTab === 'dashboard' || activeTab === 'users')) {
+      setSearchParams({ tab: 'forms' });
+    }
+  }, [isChecking, isSuperadmin, activeTab, setSearchParams]);
 
   useEffect(() => {
     setTitleDraft(settings.title);
@@ -105,46 +114,60 @@ export default function Result() {
             Pengaturan
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700/50">
-              <label className="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Judul Form Survei</label>
-              <form onSubmit={handleUpdateTitle} className="flex gap-2">
-                <input type="text" value={titleDraft} onChange={(e) => setTitleDraft(e.target.value)} className="flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 text-sm" />
-                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer">Simpan</button>
-              </form>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700/50 flex flex-col justify-center">
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Izinkan Multi-Submission</label>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Satu perangkat bisa isi form berkali-kali</p>
+            {isSuperadmin && (
+              <>
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700/50">
+                  <label className="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Judul Form Survei</label>
+                  <form onSubmit={handleUpdateTitle} className="flex gap-2">
+                    <input type="text" value={titleDraft} onChange={(e) => setTitleDraft(e.target.value)} className="flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 text-sm" />
+                    <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer">Simpan</button>
+                  </form>
                 </div>
-                <button 
-                  onClick={handleToggleMultiple}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors cursor-pointer ${settings.allowMultiple ? 'bg-blue-600' : 'bg-gray-400 dark:bg-gray-600'}`}
-                >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${settings.allowMultiple ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </div>
-            </div>
+
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700/50 flex flex-col justify-center">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Izinkan Multi-Submission</label>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Satu perangkat bisa isi form berkali-kali</p>
+                    </div>
+                    <button 
+                      onClick={handleToggleMultiple}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors cursor-pointer ${settings.allowMultiple ? 'bg-blue-600' : 'bg-gray-400 dark:bg-gray-600'}`}
+                    >
+                      <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${settings.allowMultiple ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700/50">
-              <label className="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Ganti Password Admin</label>
+              <label className="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Ganti Password</label>
               <form onSubmit={handleUpdatePassword} className="flex gap-2">
                 <input type="password" placeholder="Password Baru" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="flex-1 w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 text-sm" required />
                 <button type="submit" className="bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/20 hover:bg-red-500/30 hover:border-red-500/50 px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer">Ubah</button>
               </form>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700/50 flex flex-col justify-center">
-              <label className="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Bagikan Link Survei</label>
-              <button onClick={async () => { const r = await copyFormLink('/'); if (r.success) showToast('Link survei disalin!', 'success'); }} className="flex items-center justify-center gap-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-4 py-2.5 rounded-xl border border-indigo-500/20 text-sm font-semibold transition-colors cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                Salin Link
-              </button>
-            </div>
+            {isSuperadmin && (
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700/50 flex flex-col justify-center">
+                <label className="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Bagikan Link Survei</label>
+                <button onClick={async () => { const r = await copyFormLink('/'); if (r.success) showToast('Link survei disalin!', 'success'); }} className="flex items-center justify-center gap-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-4 py-2.5 rounded-xl border border-indigo-500/20 text-sm font-semibold transition-colors cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                  Salin Link
+                </button>
+              </div>
+            )}
           </div>
         </div>
+      );
+    }
+
+    if (activeTab === 'users' && isSuperadmin) {
+      return (
+        <Suspense fallback={<div className="text-center py-20 text-gray-400">Memuat manajemen user...</div>}>
+          <UserManagement showToast={showToast} />
+        </Suspense>
       );
     }
 
@@ -238,7 +261,15 @@ export default function Result() {
       <div className="max-w-7xl mx-auto">
         {/* Header & Navigation */}
         <div className="flex flex-wrap gap-4 justify-between items-center mb-8 bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white">Admin Panel</h1>
+          <div className="flex flex-col">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white">Admin Panel</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{user?.email}</span>
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${isSuperadmin ? 'bg-purple-500/10 text-purple-500 border border-purple-500/20' : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'}`}>
+                {user?.role}
+              </span>
+            </div>
+          </div>
           
           <div className="flex flex-wrap items-center gap-4 md:gap-6">
             <div className="hidden md:flex items-center gap-6 border-r border-gray-300 dark:border-gray-700 pr-6">
